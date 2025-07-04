@@ -1,29 +1,60 @@
 # E-commerce Backend API
 
-A RESTful API for an e-commerce platform built with Go, Gin, and MongoDB.
+A complete RESTful API for an e-commerce platform built with Go, Gin, and MongoDB. This API provides user authentication, product management, and order processing capabilities.
 
-## Prerequisites
+## 🚀 Features
+
+- **User Authentication**: Registration, login with JWT tokens
+- **Product Management**: Full CRUD operations for products
+- **Order Management**: Create and manage orders with product validation
+- **Security**: Password hashing, JWT authentication, input validation
+- **Database**: MongoDB integration with proper data models
+- **Error Handling**: Comprehensive error messages and validation
+
+## 📋 Prerequisites
 
 - Go 1.21 or higher
-- MongoDB
+- MongoDB (local or Atlas)
 - Git
-- A REST API client (like Postman, Insomnia, or cURL)
+- A REST API client (Postman, Insomnia, or cURL)
 
-## Setup Instructions
+## 🛠️ Setup Instructions
 
 ### 1. Install Go (if not installed)
 - Visit [Go's official download page](https://golang.org/dl/)
 - Download and install the appropriate version for your OS
-- Verify installation by running:
+- Verify installation:
   ```bash
   go version
   ```
 
 ### 2. Install MongoDB (if not installed)
-- Download [MongoDB Community Server](https://www.mongodb.com/try/download/community)
-- Follow the installation instructions for your OS
-- Start MongoDB service
-- Default MongoDB URL will be: `mongodb://localhost:27017`
+1. Download [MongoDB Community Server](https://www.mongodb.com/try/download/community)
+2. Run the installer with these specific settings:
+   - Choose "Complete" installation type
+   - In "Service Configuration":
+     - Check "Install MongoDB as a Service"
+     - Select "Run service as Network Service user" (recommended)
+     - Keep "Service Name" as "MongoDB"
+   - Check "Install MongoDB Compass" if you want a GUI tool
+3. After installation:
+   ```bash
+   # Windows (PowerShell) - Verify service is running
+   Get-Service MongoDB
+   
+   # If service is not running, start it
+   Start-Service MongoDB
+   
+   # To ensure service starts automatically on boot
+   Set-Service MongoDB -StartupType Automatic
+   ```
+
+Note: If you accidentally installed MongoDB with Local System account, you can change it:
+1. Open Services (services.msc)
+2. Find MongoDB service
+3. Right-click → Properties
+4. In "Log On" tab, select "Network Service"
+5. Click Apply and restart the service
 
 ### 3. Project Setup
 
@@ -40,7 +71,8 @@ A RESTful API for an e-commerce platform built with Go, Gin, and MongoDB.
    JWT_SECRET=<your-generated-secret>
    PORT=8080
    ```
-   Note: For JWT_SECRET, use a secure random string. You can generate one using PowerShell:
+   
+   **Generate JWT Secret (PowerShell):**
    ```powershell
    $jwtSecret = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 32 | ForEach-Object {[char]$_})
    echo $jwtSecret
@@ -56,216 +88,215 @@ A RESTful API for an e-commerce platform built with Go, Gin, and MongoDB.
    go run .
    ```
 
-## Testing the API
+## 🧪 Testing the API
 
-### Using Postman/Insomnia
+### Using the Test Script
 
-1. **Register a User**
-   ```http
-   POST http://localhost:8080/api/auth/register
-   Content-Type: application/json
+The project includes a PowerShell test script that tests all endpoints:
 
-   {
-       "email": "test@example.com",
-       "password": "password123",
-       "name": "Test User",
-       "address": "123 Test St"
-   }
-   ```
+```powershell
+.\test_api.ps1
+```
 
-2. **Login**
-   ```http
-   POST http://localhost:8080/api/auth/login
-   Content-Type: application/json
+This script will:
+1. Register a new user
+2. Login and get JWT token
+3. Create a product
+4. Get all products
+5. Create an order
+6. Get user orders
 
-   {
-       "email": "test@example.com",
-       "password": "password123"
-   }
-   ```
-   Save the returned JWT token for authenticated requests.
+### Manual Testing with cURL
 
-3. **Create a Product (Protected Route)**
-   ```http
-   POST http://localhost:8080/api/products
-   Authorization: Bearer <your-jwt-token>
-   Content-Type: application/json
-
-   {
-       "name": "Test Product",
-       "description": "A test product",
-       "price": 29.99,
-       "stock": 100,
-       "category": "Test Category"
-   }
-   ```
-
-4. **Create an Order (Protected Route)**
-   ```http
-   POST http://localhost:8080/api/orders
-   Authorization: Bearer <your-jwt-token>
-   Content-Type: application/json
-
-   {
-       "items": [
-           {
-               "product_id": "<product-id-from-previous-step>",
-               "quantity": 2,
-               "price": 29.99
-           }
-       ]
-   }
-   ```
-
-### Using cURL
-
-1. **Register:**
+1. **Register User:**
    ```bash
    curl -X POST http://localhost:8080/api/auth/register \
    -H "Content-Type: application/json" \
-   -d '{"email":"test@example.com","password":"password123","name":"Test User","address":"123 Test St"}'
+   -d '{"email":"test@example.com","password":"test123","name":"Test User","address":"123 Test St"}'
    ```
 
 2. **Login:**
    ```bash
    curl -X POST http://localhost:8080/api/auth/login \
    -H "Content-Type: application/json" \
-   -d '{"email":"test@example.com","password":"password123"}'
+   -d '{"email":"test@example.com","password":"test123"}'
    ```
 
-3. **Get Products (Public):**
-   ```bash
-   curl http://localhost:8080/api/products
-   ```
-
-4. **Create Product (Protected):**
+3. **Create Product (with JWT token):**
    ```bash
    curl -X POST http://localhost:8080/api/products \
    -H "Authorization: Bearer <your-jwt-token>" \
    -H "Content-Type: application/json" \
-   -d '{"name":"Test Product","description":"A test product","price":29.99,"stock":100,"category":"Test Category"}'
+   -d '{"name":"Test Product","description":"A test product","price":29.99,"stock":100,"category":"Electronics"}'
    ```
 
-## API Endpoints Reference
+4. **Get Products (public):**
+   ```bash
+   curl http://localhost:8080/api/products
+   ```
+
+5. **Create Order (with JWT token):**
+   ```bash
+   curl -X POST http://localhost:8080/api/orders \
+   -H "Authorization: Bearer <your-jwt-token>" \
+   -H "Content-Type: application/json" \
+   -d '{"items":[{"product_id":"<product-id>","quantity":2,"price":29.99}]}'
+   ```
+
+## 📚 API Documentation
 
 ### Authentication Endpoints
 
 #### Register User
 - **POST** `/api/auth/register`
-- Body:
-```json
-{
+- **Body:**
+  ```json
+  {
     "email": "user@example.com",
     "password": "password123",
     "name": "John Doe",
     "address": "123 Street, City"
-}
-```
+  }
+  ```
+- **Response:** User object (without password)
+- **Validation:**
+  - Email must be valid format
+  - Password minimum 6 characters
+  - Name is required
+  - Email must be unique
 
 #### Login
 - **POST** `/api/auth/login`
-- Body:
-```json
-{
+- **Body:**
+  ```json
+  {
     "email": "user@example.com",
     "password": "password123"
-}
-```
-- Returns: JWT token
+  }
+  ```
+- **Response:** JWT token
+- **Validation:** Valid email/password combination
 
 ### Products Endpoints
 
 #### Get All Products (Public)
 - **GET** `/api/products`
+- **Response:** Array of product objects
+- **Authentication:** Not required
 
 #### Get Single Product (Public)
 - **GET** `/api/products/:id`
+- **Response:** Single product object
+- **Authentication:** Not required
 
 #### Create Product (Protected)
 - **POST** `/api/products`
-- Requires Authentication
-- Body:
-```json
-{
+- **Headers:** `Authorization: Bearer <jwt-token>`
+- **Body:**
+  ```json
+  {
     "name": "Product Name",
     "description": "Product Description",
     "price": 99.99,
     "stock": 100,
     "category": "Electronics"
-}
-```
+  }
+  ```
+- **Validation:**
+  - Name is required
+  - Price must be > 0
+  - Stock must be >= 0
 
 #### Update Product (Protected)
 - **PUT** `/api/products/:id`
-- Requires Authentication
-- Body: Same as Create Product
+- **Headers:** `Authorization: Bearer <jwt-token>`
+- **Body:** Same as Create Product
+- **Validation:** Same as Create Product
 
 #### Delete Product (Protected)
 - **DELETE** `/api/products/:id`
-- Requires Authentication
+- **Headers:** `Authorization: Bearer <jwt-token>`
+- **Response:** Success message
 
 ### Orders Endpoints
 
 #### Create Order (Protected)
 - **POST** `/api/orders`
-- Requires Authentication
-- Body:
-```json
-{
+- **Headers:** `Authorization: Bearer <jwt-token>`
+- **Body:**
+  ```json
+  {
     "items": [
-        {
-            "product_id": "product_id_here",
-            "quantity": 2,
-            "price": 99.99
-        }
+      {
+        "product_id": "product_id_here",
+        "quantity": 2,
+        "price": 99.99
+      }
     ]
-}
-```
+  }
+  ```
+- **Validation:**
+  - Product ID must be valid ObjectID
+  - Product must exist in database
+  - Quantity must be > 0
+  - Price must be > 0
 
 #### Get User Orders (Protected)
 - **GET** `/api/orders`
-- Requires Authentication
+- **Headers:** `Authorization: Bearer <jwt-token>`
+- **Response:** Array of user's orders
 
 #### Get Single Order (Protected)
 - **GET** `/api/orders/:id`
-- Requires Authentication
+- **Headers:** `Authorization: Bearer <jwt-token>`
+- **Response:** Single order object
+- **Validation:** Order must belong to authenticated user
 
 #### Update Order Status (Protected)
 - **PUT** `/api/orders/:id/status`
-- Requires Authentication
-- Body:
-```json
-{
+- **Headers:** `Authorization: Bearer <jwt-token>`
+- **Body:**
+  ```json
+  {
     "status": "processing"
-}
+  }
+  ```
+- **Response:** Success message
+
+## 🔧 Server Management Scripts
+
+The project includes PowerShell scripts for easy server management:
+
+### Kill Process on Port
+```powershell
+# Kill any process using port 8080
+.\scripts\kill_port.ps1 -Port 8080
 ```
 
-## Authentication
-
-For protected endpoints, include the JWT token in the Authorization header:
-```
-Authorization: Bearer your_jwt_token_here
-```
-
-## Error Handling
-
-The API returns appropriate HTTP status codes and error messages in JSON format:
-```json
-{
-    "error": "Error message here"
-}
+### Stop Server
+```powershell
+# Stop the server and clean up processes
+.\scripts\stop_server.ps1
 ```
 
-## Common HTTP Status Codes
+These scripts are useful when:
+- The server didn't shut down properly
+- Port conflicts occur
+- You need to quickly restart the server
+- Multiple instances are running
 
-- 200: Success
-- 201: Created
-- 400: Bad Request
-- 401: Unauthorized
-- 404: Not Found
-- 500: Internal Server Error
+To use these scripts:
+1. Open PowerShell
+2. Navigate to the project directory
+3. Run the desired script
 
-## Troubleshooting
+Note: You might need to set PowerShell execution policy to run scripts:
+```powershell
+# Run as administrator
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+## 🚨 Troubleshooting
 
 ### MongoDB Connection Issues
 
@@ -345,9 +376,128 @@ If you see errors related to the .env file:
    - Check file and directory permissions
    - Ensure write access to the project directory
 
-## Development Tips
+## 📊 Data Models
+
+### User
+```go
+type User struct {
+    ID        primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+    Email     string            `json:"email" bson:"email"`
+    Password  string            `json:"-" bson:"password"`
+    Name      string            `json:"name" bson:"name"`
+    Address   string            `json:"address" bson:"address"`
+    CreatedAt time.Time         `json:"created_at" bson:"created_at"`
+    UpdatedAt time.Time         `json:"updated_at" bson:"updated_at"`
+}
+```
+
+### Product
+```go
+type Product struct {
+    ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+    Name        string            `json:"name" bson:"name"`
+    Description string            `json:"description" bson:"description"`
+    Price       float64           `json:"price" bson:"price"`
+    Stock       int               `json:"stock" bson:"stock"`
+    Category    string            `json:"category" bson:"category"`
+    CreatedAt   time.Time         `json:"created_at" bson:"created_at"`
+    UpdatedAt   time.Time         `json:"updated_at" bson:"updated_at"`
+}
+```
+
+### Order
+```go
+type Order struct {
+    ID        primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+    UserID    primitive.ObjectID `json:"user_id" bson:"user_id"`
+    Items     []OrderItem        `json:"items" bson:"items"`
+    Total     float64            `json:"total" bson:"total"`
+    Status    string             `json:"status" bson:"status"`
+    CreatedAt time.Time          `json:"created_at" bson:"created_at"`
+    UpdatedAt time.Time          `json:"updated_at" bson:"updated_at"`
+}
+```
+
+## 🔐 Authentication
+
+For protected endpoints, include the JWT token in the Authorization header:
+```
+Authorization: Bearer your_jwt_token_here
+```
+
+## 📝 Error Handling
+
+The API returns appropriate HTTP status codes and error messages in JSON format:
+```json
+{
+    "error": "Error message here"
+}
+```
+
+## 📋 Common HTTP Status Codes
+
+- 200: Success
+- 201: Created
+- 400: Bad Request
+- 401: Unauthorized
+- 404: Not Found
+- 409: Conflict (e.g., duplicate email)
+- 500: Internal Server Error
+
+## 🛡️ Security Features
+
+- **Password Hashing**: All passwords are hashed using bcrypt
+- **JWT Authentication**: Secure token-based authentication
+- **Input Validation**: Comprehensive validation for all inputs
+- **Protected Routes**: Authentication required for sensitive operations
+- **Data Sanitization**: Input trimming and validation
+
+## 🚀 Development Tips
 
 1. Use the `.env` file to configure your environment
 2. Keep your JWT token secure and include it in all protected requests
 3. Monitor MongoDB connection in the console logs
-4. Check response status codes and error messages for debugging 
+4. Check response status codes and error messages for debugging
+5. Use the provided test script for quick API validation
+6. Use the server management scripts for easy deployment
+
+## 📦 Project Structure
+
+```
+EcomBackend/
+├── main.go                 # Application entry point
+├── routes.go               # Route definitions
+├── go.mod                  # Go module file
+├── .env                    # Environment variables
+├── .env.example           # Environment template
+├── .gitignore             # Git ignore rules
+├── README.md              # This documentation
+├── test_api.ps1           # API test script
+├── models/                 # Data models
+│   ├── user.go
+│   ├── product.go
+│   └── order.go
+├── handlers/               # Request handlers
+│   ├── auth.go
+│   ├── product.go
+│   └── order.go
+├── middleware/             # Middleware functions
+│   └── auth.go
+├── db/                     # Database connection
+│   └── mongodb.go
+└── scripts/                # Server management scripts
+    ├── kill_port.ps1
+    └── stop_server.ps1
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License. 
