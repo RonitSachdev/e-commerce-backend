@@ -365,33 +365,6 @@ Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ## 🚨 Troubleshooting
 
-### 500 Error on Order Creation (Schema Mismatch)
-
-If you get a 500 error when creating an order, and the logs show a message like:
-
-```
-Database error: write exception: write errors: [Document failed validation: ... missingProperties: ["products","total_amount"]
-```
-
-This means your MongoDB validation schema is out of sync with your Go code. The Go code uses `items` and `total` fields for orders, but the old schema may expect `products` and `total_amount`.
-
-**How to fix:**
-1. Stop all containers:
-   ```bash
-   docker-compose down
-   ```
-2. Remove the MongoDB data volume (this will delete all data!):
-   ```bash
-   docker-compose down -v
-   ```
-3. Start the containers again:
-   ```bash
-   docker-compose up -d
-   ```
-4. The database will be re-initialized with the correct schema from `scripts/init-mongo.js`.
-
-**Note:** If you change the schema in `scripts/init-mongo.js`, you must remove the volume and restart as above for changes to take effect.
-
 ### MongoDB Connection Issues
 
 If you see an error like:
