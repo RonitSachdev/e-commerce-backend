@@ -1,0 +1,53 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Environment files (except example)
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Test files
+*_test.go
+test_*.go
+
+# Documentation
+README.md
+docs/
+
+# Scripts (except init-mongo.js)
+scripts/
+!scripts/init-mongo.js
+
+# Build artifacts
+main.exe
+main
+dist/
+build/
+
+# Coverage
+coverage/
+*.out 

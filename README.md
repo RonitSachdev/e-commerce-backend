@@ -20,7 +20,74 @@ A complete RESTful API for an e-commerce platform built with Go, Gin, and MongoD
 
 ## 🛠️ Setup Instructions
 
-### 1. Install Go (if not installed)
+### Option 1: Docker Setup (Recommended)
+
+#### Prerequisites
+- Docker Desktop installed and running
+- Git
+
+#### Quick Start with Docker
+
+1. **Clone and setup:**
+   ```bash
+   git clone <repository-url>
+   cd EcomBackend
+   ```
+
+2. **Run the Docker setup script:**
+   ```powershell
+   .\scripts\docker-setup.ps1
+   ```
+
+3. **Start the application:**
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Check the services:**
+   ```bash
+   docker-compose ps
+   ```
+
+5. **View logs:**
+   ```bash
+   docker-compose logs -f
+   ```
+
+#### Docker Services Available:
+- **API**: `http://localhost:8080` - Main e-commerce API
+- **MongoDB**: `localhost:27017` - Database
+- **Mongo Express**: `http://localhost:8081` - MongoDB admin interface (admin/password123)
+
+#### Docker Commands:
+```bash
+# Start services
+docker-compose up -d
+
+# Stop services
+docker-compose down
+
+# Rebuild and start
+docker-compose up -d --build
+
+# View logs
+docker-compose logs -f api
+
+# Access container shell
+docker-compose exec api sh
+
+# Production deployment
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+### Option 2: Local Development Setup
+
+#### Prerequisites
+- Go 1.21 or higher
+- MongoDB (local or Atlas)
+- Git
+
+#### 1. Install Go (if not installed)
 - Visit [Go's official download page](https://golang.org/dl/)
 - Download and install the appropriate version for your OS
 - Verify installation:
@@ -28,7 +95,7 @@ A complete RESTful API for an e-commerce platform built with Go, Gin, and MongoD
   go version
   ```
 
-### 2. Install MongoDB (if not installed)
+#### 2. Install MongoDB (if not installed)
 1. Download [MongoDB Community Server](https://www.mongodb.com/try/download/community)
 2. Run the installer with these specific settings:
    - Choose "Complete" installation type
@@ -56,7 +123,7 @@ Note: If you accidentally installed MongoDB with Local System account, you can c
 4. In "Log On" tab, select "Network Service"
 5. Click Apply and restart the service
 
-### 3. Project Setup
+#### 3. Project Setup
 
 1. Clone the repository:
    ```bash
@@ -298,6 +365,33 @@ Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ## 🚨 Troubleshooting
 
+### 500 Error on Order Creation (Schema Mismatch)
+
+If you get a 500 error when creating an order, and the logs show a message like:
+
+```
+Database error: write exception: write errors: [Document failed validation: ... missingProperties: ["products","total_amount"]
+```
+
+This means your MongoDB validation schema is out of sync with your Go code. The Go code uses `items` and `total` fields for orders, but the old schema may expect `products` and `total_amount`.
+
+**How to fix:**
+1. Stop all containers:
+   ```bash
+   docker-compose down
+   ```
+2. Remove the MongoDB data volume (this will delete all data!):
+   ```bash
+   docker-compose down -v
+   ```
+3. Start the containers again:
+   ```bash
+   docker-compose up -d
+   ```
+4. The database will be re-initialized with the correct schema from `scripts/init-mongo.js`.
+
+**Note:** If you change the schema in `scripts/init-mongo.js`, you must remove the volume and restart as above for changes to take effect.
+
 ### MongoDB Connection Issues
 
 If you see an error like:
@@ -461,6 +555,64 @@ The API returns appropriate HTTP status codes and error messages in JSON format:
 5. Use the provided test script for quick API validation
 6. Use the server management scripts for easy deployment
 
+## 🐳 Docker Deployment
+
+### Development Environment
+
+The project includes comprehensive Docker support for easy deployment:
+
+#### Docker Files:
+- `Dockerfile` - Multi-stage build for the Go application
+- `docker-compose.yml` - Development environment with MongoDB and Mongo Express
+- `docker-compose.prod.yml` - Production-ready configuration with nginx
+- `.dockerignore` - Excludes unnecessary files from Docker build
+
+#### Quick Docker Commands:
+```bash
+# Development
+docker-compose up -d
+
+# Production
+docker-compose -f docker-compose.prod.yml up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+
+# Rebuild
+docker-compose up -d --build
+```
+
+#### Docker Services:
+- **API**: `http://localhost:8080` - Main e-commerce API
+- **MongoDB**: `localhost:27017` - Database with authentication
+- **Mongo Express**: `http://localhost:8081` - MongoDB admin interface
+- **Nginx** (production): Reverse proxy with SSL termination
+
+#### Production Features:
+- Multi-stage Docker builds for smaller images
+- Non-root user for security
+- Health checks for all services
+- Resource limits and reservations
+- SSL/TLS termination with nginx
+- Rate limiting and security headers
+- Persistent MongoDB data storage
+
+### Environment Variables
+
+For Docker deployment, use the `env.example` file as a template:
+
+```bash
+# Copy and customize
+cp env.example .env
+
+# Or use environment variables directly
+export JWT_SECRET=your_secure_secret
+export MONGO_ROOT_PASSWORD=your_secure_password
+```
+
 ## 📦 Project Structure
 
 ```
@@ -469,10 +621,14 @@ EcomBackend/
 ├── routes.go               # Route definitions
 ├── go.mod                  # Go module file
 ├── .env                    # Environment variables
-├── .env.example           # Environment template
+├── env.example            # Environment template
 ├── .gitignore             # Git ignore rules
 ├── README.md              # This documentation
 ├── test_api.ps1           # API test script
+├── Dockerfile             # Docker configuration
+├── docker-compose.yml     # Development Docker setup
+├── docker-compose.prod.yml # Production Docker setup
+├── .dockerignore          # Docker ignore rules
 ├── models/                 # Data models
 │   ├── user.go
 │   ├── product.go
@@ -485,9 +641,13 @@ EcomBackend/
 │   └── auth.go
 ├── db/                     # Database connection
 │   └── mongodb.go
-└── scripts/                # Server management scripts
-    ├── kill_port.ps1
-    └── stop_server.ps1
+├── scripts/                # Management scripts
+│   ├── kill_port.ps1
+│   ├── stop_server.ps1
+│   ├── docker-setup.ps1
+│   └── init-mongo.js
+└── nginx/                  # Nginx configuration
+    └── nginx.conf
 ```
 
 ## 🤝 Contributing
