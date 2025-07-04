@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"ecombackend/db"
@@ -17,24 +18,57 @@ import (
 )
 
 func Register(c *gin.Context) {
-	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	var userReg models.UserRegister
+	if err := c.ShouldBindJSON(&userReg); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	// Validate required fields
+	if strings.TrimSpace(userReg.Email) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email is required"})
+		return
+	}
+	if strings.TrimSpace(userReg.Password) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Password is required"})
+		return
+	}
+	if len(userReg.Password) < 6 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Password must be at least 6 characters long"})
+		return
+	}
+	if strings.TrimSpace(userReg.Name) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Name is required"})
+		return
+	}
+
+	// Check if user already exists
+	collection := db.GetCollection("users")
+	var existingUser models.User
+	err := collection.FindOne(context.Background(), bson.M{"email": userReg.Email}).Decode(&existingUser)
+	if err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "User with this email already exists"})
+		return
+	}
+
+	// Create user from registration data
+	user := models.User{
+		Email:     strings.TrimSpace(userReg.Email),
+		Name:      strings.TrimSpace(userReg.Name),
+		Address:   strings.TrimSpace(userReg.Address),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
 	// Hash password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userReg.Password), bcrypt.DefaultCost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
 	}
 
 	user.Password = string(hashedPassword)
-	user.CreatedAt = time.Now()
-	user.UpdatedAt = time.Now()
 
-	collection := db.GetCollection("users")
 	result, err := collection.InsertOne(context.Background(), user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
@@ -53,9 +87,19 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	// Validate required fields
+	if strings.TrimSpace(login.Email) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email is required"})
+		return
+	}
+	if strings.TrimSpace(login.Password) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Password is required"})
+		return
+	}
+
 	collection := db.GetCollection("users")
 	var user models.User
-	err := collection.FindOne(context.Background(), bson.M{"email": login.Email}).Decode(&user)
+	err := collection.FindOne(context.Background(), bson.M{"email": strings.TrimSpace(login.Email)}).Decode(&user)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
@@ -81,4 +125,4 @@ func Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"token": tokenString})
-} 
+}

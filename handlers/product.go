@@ -20,6 +20,20 @@ func CreateProduct(c *gin.Context) {
 		return
 	}
 
+	// Validate required fields
+	if product.Name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Product name is required"})
+		return
+	}
+	if product.Price <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Product price must be greater than 0"})
+		return
+	}
+	if product.Stock < 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Product stock cannot be negative"})
+		return
+	}
+
 	product.CreatedAt = time.Now()
 	product.UpdatedAt = time.Now()
 
@@ -83,6 +97,20 @@ func UpdateProduct(c *gin.Context) {
 		return
 	}
 
+	// Validate required fields
+	if product.Name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Product name is required"})
+		return
+	}
+	if product.Price <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Product price must be greater than 0"})
+		return
+	}
+	if product.Stock < 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Product stock cannot be negative"})
+		return
+	}
+
 	product.UpdatedAt = time.Now()
 
 	collection := db.GetCollection("products")
@@ -126,4 +154,4 @@ func DeleteProduct(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Product deleted successfully"})
-} 
+}
